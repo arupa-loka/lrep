@@ -1,0 +1,40 @@
+#Import('*')
+Import('env')
+
+#env = Environment()
+#
+sources = Glob('*.cpp')
+# remove target sources
+#common_sources.remove(File('test-dfs.cpp'))
+#common_sources.remove(File('test-bitvec.cpp'))
+
+#for file_node in sources:
+#	print file_node.path
+
+
+env.Append( OBJECTS = env.Object(sources) )
+#Object(['Stack.hpp','Queue.hpp'])
+
+# Ex: adding common source files
+#common_sources = ['A.cpp','B.cpp']
+#target = env.Program(target='bar', source=common_sources+['testSCons.cpp'])
+
+# Ex: easily manage list of files
+#common_sources = Split('A.cpp B.cpp')
+#common_sources = Split('''A.cpp
+#						B.cpp
+#						C.cpp''')
+
+#target = env.Program(target='bar', source='testSCons.cpp')
+#target = env.Program(target='bar', source=['testSCons.cpp'])
+#target = env.Program(target='main', source=Glob('*.cpp') )
+
+# Ex: using keyword arguments you can reverse the order of params too
+#target = env.Program( source='testSCons.cpp', target='bar' )
+
+#env.Command('file.out', 'file.in', "sed 's/a/b/g' < $SOURCE  > $TARGET")
+
+#Default(target)
+
+
+

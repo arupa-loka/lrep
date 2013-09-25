@@ -1,0 +1,28 @@
+#Import('*')
+Import('env')
+
+env.Append( OBJECTS = env.Object(Glob('*.cpp')) )
+
+# Ex: adding common source files
+#common_sources = ['A.cpp','B.cpp']
+#target = env.Program(target='bar', source=common_sources+['testSCons.cpp'])
+
+# Ex: easily manage list of files
+#common_sources = Split('A.cpp B.cpp')
+#common_sources = Split('''A.cpp
+#						B.cpp
+#						C.cpp''')
+
+#target = env.Program(target='bar', source='testSCons.cpp')
+#target = env.Program(target='bar', source=['testSCons.cpp'])
+#target = env.Program(target='main', source=Glob('*.cpp') )
+
+# Ex: using keyword arguments you can reverse the order of params too
+#target = env.Program( source='testSCons.cpp', target='bar' )
+
+#env.Command('file.out', 'file.in', "sed 's/a/b/g' < $SOURCE  > $TARGET")
+
+#Default(target)
+
+
+

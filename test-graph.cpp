@@ -58,6 +58,7 @@ int main(int argc, char * argv[])
     bfs.toGraphViz("./graphviz.gv");
   }
 
+  delete gen;
   printf("END\n");
   return 0;
 }

@@ -191,7 +191,9 @@ void DFS_M::cycleCheck(char edgeType, int v0, int v1, int & cyclecount)
         // The new cycle is defined by its B edge v0 v1
         // that also defines the main-cycle
         // TODO optim, use a reference here
-        CycleProperties & main_cycle = _cycle[cv0[i]];
+        // WARNING using a ref, the object pointed by the ref, can be deallocated
+        // by the vector when doing pushBack, invalidating the use of the ref
+        CycleProperties main_cycle = _cycle[cv0[i]];
         _cycle.pushBack(main_cycle);
         printf("Cycle %d: F", cyclecount);
         printf("(%d, %d) creates a sub-cycle over: B(%d, %d)\n", v0, v1, main_cycle.v0, main_cycle.v1);
@@ -214,7 +216,9 @@ void DFS_M::cycleCheck(char edgeType, int v0, int v1, int & cyclecount)
       // check if a cycle on this node has an ancestor with null postorder number
       int cycle_number = v1_cycles[i];
       // TODO optim use a reference here
-      CycleProperties & cycle_prop = _cycle[cycle_number];
+      // WARNING using a ref, the object pointed by the ref, can be deallocated
+      // by the vector when doing pushBack, invalidating the use of the ref
+      CycleProperties cycle_prop = _cycle[cycle_number];
       if (_postorder[cycle_prop.v1] == -1) {
         printf("Cycle %d: C", cyclecount);
         printf("(%d, %d) extends a cycle over: B(%d, %d) TODO\n", v0, v1, cycle_prop.v0, cycle_prop.v1);
@@ -433,6 +437,7 @@ DFS_M::~DFS_M()
   if (_preorder)   { delete[](_preorder);   }
   if (_inorder)   { delete[](_inorder);   }
   if (_postorder)   { delete[](_postorder);   }
+  if (_forest)   { delete[](_forest);   }
   if (_matrix) 
   {
     for (int i=0; i<_graph.getVertexSize(); ++i)

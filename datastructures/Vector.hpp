@@ -27,6 +27,7 @@ class Vector
   
   private:
   
+  T* extend(int new_size);
   T* vector_; 
   int used_size_;
   int alloc_size_;
@@ -48,27 +49,36 @@ Vector<T>::Vector(const Vector<T> & iV) : vector_(NULL), used_size_(0), alloc_si
 }
 
 template< class T >
-void Vector<T>::realloc(int new_size)
+T * Vector<T>::extend(int new_size)
 {
   // TODO improve allocation process,
   // to be aligned to powers of 2??
+  T * new_vector = NULL;
   if (new_size > alloc_size_)
   {
-    T * new_vector = new T[new_size];
+    new_vector = new T[new_size];
     // initialize memory to zero
     memset(new_vector, 0, sizeof(T)*new_size);
 
     if (vector_)
-    {
       copy(vector_, vector_+used_size_, new_vector);
-      delete[] vector_;
-      vector_ = NULL;
-    }
-    vector_ = new_vector;
-    // TODO alloc_size_ could be different if we decide to align the real memory
-    // allocated to powers of 2
-    alloc_size_ = new_size;
   }
+  return new_vector;
+}
+
+template< class T >
+void Vector<T>::realloc(int new_size)
+{
+  T * new_vector = extend(new_size);
+  if (new_vector!=NULL) {
+    // delete of an already NULL vector is legal
+    delete[] vector_;
+    vector_ = NULL;
+  }
+  vector_ = new_vector;
+  // TODO alloc_size_ could be different if we decide to align the real memory
+  // allocated to powers of 2
+  alloc_size_ = new_size;
 }
 
 template< class T>
@@ -127,12 +137,20 @@ bool Vector<T>::empty() const
 template <class T>
 void Vector<T>::pushBack(T & iElem)
 {
-  this->realloc(used_size_+1);
-  // TODO bug, here if iElem already belongs to this vector, there are chances
-  // that the corresponding space will be deallocated in realloc, and iElem will
-  // point to something invalid.
-  vector_[used_size_] = iElem;
-  ++used_size_;
+  T* new_vector = this->extend(used_size_+1);
+  if (new_vector!=NULL) {
+    new_vector[used_size_] = iElem;
+    delete[] vector_;
+    vector_ = new_vector;
+    ++used_size_;
+    alloc_size_ = used_size_;
+  } else {
+    // TODO bug, here if iElem already belongs to this vector, there are chances
+    // that the corresponding space will be deallocated in realloc, and iElem will
+    // point to something invalid.
+    vector_[used_size_] = iElem;
+    ++used_size_;
+  }
 }
 
 template <class T>

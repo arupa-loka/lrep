@@ -4,4 +4,16 @@
 *.gif
 *.gv
 *.jpeg
-
+.sconsign.dblite
+data/
+datastructures/.sconsign.dblite
+test-AVLTree
+test-binarySearchList
+test-binarySearchTree
+test-bitvec
+test-btree
+test-doublyLinkedList
+test-graph
+test-linkedList
+test-sorting
+test-vector

@@ -11,7 +11,7 @@ int FileReader::open(const char * iFileName)
   fd_ = fopen(iFileName, "r");
   if (!fd_) {
     perror("Error in fopen");
-    return -1;
+    return 0;
   }
   memset(buff_, 0, BUFF_SIZE );
 
@@ -20,6 +20,7 @@ int FileReader::open(const char * iFileName)
   end_  = 0;
   word_size_ = 0;
   c_ = 0;
+  return 1;
 }
 
 int FileReader::getWord(char * iWord, int iWordSize )

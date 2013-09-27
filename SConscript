@@ -41,6 +41,7 @@ common_sources.remove(File('test-graph.cpp'))
 common_sources.remove(File('test-binarySearchList.cpp'))
 common_sources.remove(File('test-vector.cpp'))
 common_sources.remove(File('test-btree.cpp'))
+common_sources.remove(File('test-word-counter.cpp'))
 
 #for file_node in common_sources:
 #	print file_node.path
@@ -60,10 +61,11 @@ target08 = env.Program(target='test-graph', source=['test-graph.cpp', common_sou
 target09 = env.Program(target='test-binarySearchList', source=['test-binarySearchList.cpp', common_sources ], CPPPATH=['.'] )
 target10 = env.Program(target='test-vector', source=['test-vector.cpp', common_sources ], CPPPATH=['.'] )
 target11 = env.Program(target='test-btree', source=['test-btree.cpp', common_sources ], CPPPATH=['.'] )
+target12 = env.Program(target='test-word-counter', source=['test-word-counter.cpp', common_sources ], CPPPATH=['.'] )
 
 #env.Command('file.out', 'file.in', "sed 's/a/b/g' < $SOURCE  > $TARGET")
 
-env.Default(target02, target03, target04, target05, target06, target07, target08, target09, target10, target11)
+env.Default(target02, target03, target04, target05, target06, target07, target08, target09, target10, target11, target12)
 
 
 

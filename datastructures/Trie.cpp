@@ -1,7 +1,8 @@
 #include "Trie.hpp"
 #include "Stack2.hpp"
 #include "Pair.hpp"
-#include <string.h>
+#include <cstring>
+#include <cstdio>
 #include <iostream>
 
 TrieNode::TrieNode(): parent_(0), value_(0), key_(0)

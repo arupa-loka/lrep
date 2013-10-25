@@ -58,22 +58,25 @@ class RnBTree {
     RnBTree(): m_root(NULL) {}
     ~RnBTree() {}
 
-    // call normal insert binary tree and the rebalance tree
+    // call normal insert binary tree and then rebalance the tree
     void insert(T & value) {
       RnBNode<T> * new_node = insert_binary_tree(value);
-      if (new_node!=NULL)
+      if (new_node != NULL)
         insert_case_1(new_node);
-      // otherwise do nothing, value already in tree
+      // otherwise do nothing, value already exists
     }
 
-    void remove(T & value) {}
+    void remove(T & value) {
+      // TODO
+    }
+
   private:
     RnBNode<T> * m_root;
     static const RnBNode<T> m_leaf;
 
     void rotate_left(RnBNode<T> * n) {
-      RnBNode<T> * p = n->m_parent;
-      RnBNode<T> * c = n->m_right;
+      RnBNode<T> * p = n->m_parent; // parent
+      RnBNode<T> * c = n->m_right;  // child
 
       n->m_right = c->m_left;
       n->m_right->m_parent = n;
@@ -110,7 +113,7 @@ class RnBTree {
     RnBNode<T> * insert_binary_tree(T & value) {
       RnBNode<T> * new_node = NULL;
       bool insert_left = true;
-      if (m_root!=NULL) {
+      if (m_root != NULL) {
         RnBNode<T> * curr_node = m_root;
 
         // notice that we cannot rely on the m_leaf.parent value
@@ -131,10 +134,11 @@ class RnBTree {
           else
             return NULL; // value already exists
         }
-        new_node = new RnBNode<T>(RED,
-                                  curr_node,
-                                  &m_leaf,
-                                  &m_leaf);
+        // insert all new nodes as RED nodes
+        new_node = new RnBNode<T>(RED,      // color
+                                  curr_node,// parent
+                                  &m_leaf,  // left child
+                                  &m_leaf); // right child
         new_node->m_value = value;
         if (insert_left) {
           curr_node->m_left = new_node;
@@ -143,6 +147,7 @@ class RnBTree {
         }
 
       } else {
+        // root node must be BLACK
         m_root = new RnBNode<T>(BLACK, NULL, &m_leaf, &m_leaf);
         m_root.m_value = value;
         new_node = m_root;
@@ -153,7 +158,9 @@ class RnBTree {
     // case 1 root is NULL
     void insert_case_1(RnBNode<T> * new_node) {
       if (m_root==new_node) {
-        // TODO remove it, this is now redoundant
+        // This is redoundant only the first time we create a root
+        // but then can be called recursively from insert_case_3()
+        // and in that case the root could be RED again
         m_root->m_color = BLACK;
       } else {
         insert_case_2(new_node);
@@ -176,17 +183,16 @@ class RnBTree {
       assert(new_node->m_parent->m_color == RED);
       assert(new_node->grandparent()->m_color == BLACK);
       RnBNode<T> * uncle = new_node->uncle();
-      // TODO is it garuanteed to have an uncle!=NULL???
-      if (uncle == NULL) {
-        return;
-      }
+      // If a node has a parent then it also has an uncle
+      // (this is thanks to the black leaves)
+      assert(uncle != NULL);
       if (uncle->m_color == RED) {
         // parent RED and uncle RED
         // set them black and check grandparent
         RnBNode<T> * parent = new_node->m_parent;
         RnBNode<T> * grandparent = new_node->grandparent();
         parent->m_color = BLACK;
-        uncle->m_color = BLACK;
+        if (uncle != NULL) uncle->m_color = BLACK;
         grandparent->m_color = RED;
         // TODO recursion, can make it iterative
         insert_case_1(grandparent);

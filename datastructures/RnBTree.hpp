@@ -12,6 +12,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstddef>
+#include <cassert>
+// toGraphviz
+#include <iostream>
+#include <fstream>
+#include "Stack2.hpp"
+
 
 enum NODE_COLOR {
   RED=0,
@@ -33,19 +39,19 @@ struct RnBNode
   RnBNode<T>* m_right;
 
   RnBNode<T> * grandparent() {
-    if (m_parent != NULL) {
-      return m_parent.m_parent;
+   if (m_parent != NULL) {
+      return m_parent->m_parent;
     }
     return NULL;
   }
 
   RnBNode<T> * uncle() {
-    RnBNode<T> * grandparent = grandparent();
+    RnBNode<T> * grandparent = this->grandparent();
     if (grandparent != NULL) {
-      if (grandparent.m_left == m_parent)
-        return grandparent.m_right;
+      if (grandparent->m_left == m_parent)
+        return grandparent->m_right;
       else
-        return grandparent.m_left;
+        return grandparent->m_left;
     }
     return NULL;
   }
@@ -59,20 +65,24 @@ class RnBTree {
     ~RnBTree() {}
 
     // call normal insert binary tree and then rebalance the tree
-    void insert(T & value) {
+    bool insert(T & value) {
       RnBNode<T> * new_node = insert_binary_tree(value);
-      if (new_node != NULL)
+      if (new_node != NULL) {
         insert_case_1(new_node);
+        return true;
+      }
       // otherwise do nothing, value already exists
+      return false;
     }
 
     void remove(T & value) {
       // TODO
     }
+    void toGraphViz(const char* iFilePath);
 
   private:
     RnBNode<T> * m_root;
-    static const RnBNode<T> m_leaf;
+    static RnBNode<T> m_leaf;
 
     void rotate_left(RnBNode<T> * n) {
       RnBNode<T> * p = n->m_parent; // parent
@@ -81,30 +91,36 @@ class RnBTree {
       n->m_right = c->m_left;
       n->m_right->m_parent = n;
       c->m_left = n;
-      c->m_left->m_parent = c;
-      if (p->m_left == n) {
-        p->m_left = c;
-        p->m_left->m_parent = p;
+      n->m_parent = c;
+      if (p!=NULL) {
+        if (p->m_left == n)
+          p->m_left = c;
+        else
+          p->m_right = c;
+        c->m_parent = p;
       } else {
-        p->m_right = c;
-        p->m_right->m_parent = p;
+        c->m_parent = NULL;
+        m_root = c;
       }
     }
 
     void rotate_right(RnBNode<T> * n) {
       RnBNode<T> * p = n->m_parent;
-      RnBNode<T> * c = n->m_right;
-
+      RnBNode<T> * c = n->m_left;
+      
       n->m_left = c->m_right;
       n->m_left->m_parent = n;
       c->m_right = n;
-      c->m_right->m_parent = c;
-      if (p->m_left == n) {
-        p->m_left = c;
-        p->m_left->m_parent = p;
+      n->m_parent = c;
+      if (p!=NULL) {
+        if (p->m_left == n)
+          p->m_left = c;
+        else
+          p->m_right = c;
+        c->m_parent = p;
       } else {
-        p->m_right = c;
-        p->m_right->m_parent = p;
+        c->m_parent = NULL;
+        m_root = c;
       }
     }
 
@@ -112,7 +128,6 @@ class RnBTree {
     // the end
     RnBNode<T> * insert_binary_tree(T & value) {
       RnBNode<T> * new_node = NULL;
-      bool insert_left = true;
       if (m_root != NULL) {
         RnBNode<T> * curr_node = m_root;
 
@@ -127,7 +142,6 @@ class RnBTree {
           else if (curr_node->m_value < value)
             if (curr_node->m_right != &m_leaf) {
               curr_node = curr_node->m_right;
-              insert_left = false;
             } else {
               break; // leaf node reached
             }
@@ -140,7 +154,7 @@ class RnBTree {
                                   &m_leaf,  // left child
                                   &m_leaf); // right child
         new_node->m_value = value;
-        if (insert_left) {
+        if (value < curr_node->m_value) {
           curr_node->m_left = new_node;
         } else {
           curr_node->m_right = new_node;
@@ -149,7 +163,7 @@ class RnBTree {
       } else {
         // root node must be BLACK
         m_root = new RnBNode<T>(BLACK, NULL, &m_leaf, &m_leaf);
-        m_root.m_value = value;
+        m_root->m_value = value;
         new_node = m_root;
       }
       return new_node;
@@ -183,16 +197,16 @@ class RnBTree {
       assert(new_node->m_parent->m_color == RED);
       assert(new_node->grandparent()->m_color == BLACK);
       RnBNode<T> * uncle = new_node->uncle();
-      // If a node has a parent then it also has an uncle
-      // (this is thanks to the black leaves)
+      // If parent is RED then it cannot be the root,
+      // then it must have a grandparent that is BLACK,
+      // then it must have an uncle as well (thanks to the black leaves)
       assert(uncle != NULL);
       if (uncle->m_color == RED) {
         // parent RED and uncle RED
         // set them black and check grandparent
-        RnBNode<T> * parent = new_node->m_parent;
         RnBNode<T> * grandparent = new_node->grandparent();
-        parent->m_color = BLACK;
-        if (uncle != NULL) uncle->m_color = BLACK;
+        new_node->m_parent->m_color = BLACK;
+        uncle->m_color = BLACK;
         grandparent->m_color = RED;
         // TODO recursion, can make it iterative
         insert_case_1(grandparent);
@@ -227,14 +241,14 @@ class RnBTree {
     void insert_case_5(RnBNode<T> * new_node) {
       RnBNode<T> * grandparent = new_node->grandparent();
       assert(new_node->m_color == RED);
-      assert(new_node->m_parent == RED);
+      assert(new_node->m_parent->m_color == RED);
       assert(grandparent->m_color == BLACK);
-      assert((new_node->m_parent == new_node->m_parent->m_left &&
-             new_node->m_parent->m_parent == grandparent->m_left) ||
-             (new_node->m_parent == new_node->m_parent->m_right &&
-              new_node->m_parent->m_parent == grandparent->m_right));
+      assert((new_node == new_node->m_parent->m_left &&
+             new_node->m_parent == grandparent->m_left) ||
+             (new_node == new_node->m_parent->m_right &&
+              new_node->m_parent == grandparent->m_right));
       grandparent->m_color = RED;
-      new_node->m_parent = BLACK;
+      new_node->m_parent->m_color = BLACK;
       // TODO check this check
       //if (new_node == new_node->m_parent->m_left) {
       if (new_node->m_parent == grandparent->m_left) {
@@ -250,6 +264,64 @@ class RnBTree {
 };
 
 template<typename T>
-const RnBNode<T> RnBTree<T>::m_leaf(BLACK);
+RnBNode<T> RnBTree<T>::m_leaf(BLACK);
 
+template < typename T >
+void RnBTree<T>::toGraphViz(const char * iFilePath)
+{
+  std::ofstream out(iFilePath);
+  if (!out.is_open()) {
+    printf("Error: unable to open file: %s\n", iFilePath);
+    return;
+  }
+  Stack2<RnBNode<T>*> stack;
+    
+  out << "digraph RnBTree {\n";
+  out << "node [ shape=record, fixedsize=false];\n";
+  //out << "{ rankdir=RL; }\n";
+  //out << "{ rank=same; ";
+        
+  if (m_root)
+    stack.push(m_root);
+
+  while( !stack.empty() )
+  {
+    RnBNode<T>* p = stack.getTop();
+    stack.pop();
+      
+    out << "\"" << p << "\"";
+    out << "[";
+    if (p->m_color==RED)
+      out << "color=red ";
+    else
+      out << "color=black ";
+    out << "label=\"" << p << " | ";
+      
+    out << "<f" << 0 << "> | ";
+    out << "<f" << 1 << "> " << p->m_value << " | ";
+    if (p->m_left)
+      stack.push(p->m_left);
+    out << "<f" << 2 << ">\"];\n";
+    if (p->m_right)
+      stack.push(p->m_right);
+
+    if (p->m_left) 
+    {
+      out << "\"" << p << "\"";
+      out << ":";
+      out << "f" << 0 << " -> ";
+      out << "\"" << p->m_left << "\":f0;\n";
+    }
+    if (p->m_right) 
+    {
+      out << "\"" << p << "\"";
+      out << ":";
+      out << "f" << 2 << " -> ";
+      out << "\"" << p->m_right << "\":f2;\n";
+    }
+
+  }
+  out << "}\n";
+  out.close();
+}
 #endif

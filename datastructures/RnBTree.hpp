@@ -310,14 +310,14 @@ void RnBTree<T>::toGraphViz(const char * iFilePath)
       out << "\"" << p << "\"";
       out << ":";
       out << "f" << 0 << " -> ";
-      out << "\"" << p->m_left << "\":f0;\n";
+      out << "\"" << p->m_left << "\":f1;\n";
     }
     if (p->m_right) 
     {
       out << "\"" << p << "\"";
       out << ":";
       out << "f" << 2 << " -> ";
-      out << "\"" << p->m_right << "\":f2;\n";
+      out << "\"" << p->m_right << "\":f1;\n";
     }
 
   }

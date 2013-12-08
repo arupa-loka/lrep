@@ -19,7 +19,7 @@ int main()
   for (i=0; i<max_nodes; ++i)
   {
     key = rand() % 100;
-    printf("insert(%i)\n", key); 
+    printf("%i insert(%i)\n", i, key); 
     if (!rnbtree.insert(key)) {
       --i;
       continue;
@@ -32,7 +32,7 @@ int main()
     //sprintf(command, "open -a Preview rnbtree%02i.gif", i);
     //system(command);
   } 
-    --i;
+  --i;
   /*
   rnbtree.toGraphViz("rnbtree.gv");
   sprintf(command, "dot -Tgif -ornbtree%02i.gif rnbtree.gv", i);

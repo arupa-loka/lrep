@@ -12,7 +12,7 @@
 
 struct ListNode {
   int val;
-  int len;
+  int subtree_size;
   ListNode * parent;
 };
 
@@ -36,28 +36,22 @@ class DisjointSet {
       return node;
     }
 
-    // This variant keeps the tree flat.
-    // It's still incomplete.
+    // This variant keeps the tree flat applying path compression.
     ListNode * Find2(int x) {
       assert(x<alloc_size);
       ListNode * node = array[x];
       if (node != node->parent) {
         node->parent = Find2(node->parent->val);
-        // A child attached to the root has len==1.
-        node->len = 1;
       }
-      // TODO how do you determine the new len at the root?
-      // It's not necessarily 2, as you might start searching the list from the
-      // middle, then attaching directly to the root only the nodes above that
-      // point, but not the ones below it.
       return node->parent;
     }
 
-    // This version tries to determine the new len at the root.
+    // This version tries to determine the new subtree high at the root.
     // TODO: It doesn't work, as you might compress one branch up to the root, but
     // there might still be another branch for the same root that is longer.
-    // Then you cannot infer from the compressed branch only if the len from
+    // Then you cannot infer from the compressed branch only if the subtree high from
     // the root has changed or not.
+    /*
     ListNode * Find3(int x) {
       assert(x<alloc_size);
       ListNode * node = array[x];
@@ -65,35 +59,41 @@ class DisjointSet {
       if (node != node->parent) {
         ListNode * parent = InternalFind3(node->parent->val, node_compressed);
         node->parent = parent;
-        // A child attached to the root has len==1.
-        node->len = 1;
+        // A child attached to the root has subtree high==1.
+        node->subtree_high = 1;
       }
       if (node_compressed > 0) {
-        node->len -= node_compressed;
+        node->subtree_high -= node_compressed;
       }
       return node;
     }
+    */
 
     bool Union(int x, int y) {
       assert(x<alloc_size);
       assert(y<alloc_size);
-      ListNode * root_x = Find(x);
-      ListNode * root_y = Find(y);
+      ListNode * root_x = Find2(x);
+      ListNode * root_y = Find2(y);
       if (root_x->val != root_y->val) {
         // merge them
-        if (root_x->len > root_y->len) {
+        if (root_x->subtree_size > root_y->subtree_size) {
           root_y->parent = root_x;
-          // root_x->len unchanged as root_y->len is shorter than
-          // root_x->len, then this doesn't increase the longest path
+          root_x->subtree_size += root_y->subtree_size;
+          // root_x->subtree_size unchanged as root_y->subtree_size is shorter than
+          // root_x->subtree_size, then this doesn't increase the longest path
           // from root_x to any of its leaves.
-        } else if (root_y->len > root_x->len) {
+        } else { //if (root_y->subtree_size > root_x->subtree_size) {
           root_x->parent = root_y;
-          // root_y->len doesn't change for the same reasons as above.
-        } else {
-          // root_x->len == root_y->len
-          root_x->parent = root_y;
-          root_y->len += 1;
+          root_y->subtree_size += root_x->subtree_size;
+          // root_y->subtree_size doesn't change for the same reasons as above.
         }
+        /*
+        else {
+          // root_x->subtree_size == root_y->subtree_size
+          root_x->parent = root_y;
+          root_y->subtree_size += 1;
+        }
+        */
         //root_x->parent = root_y;
         set_size -= 1;
         return true;
@@ -106,7 +106,7 @@ class DisjointSet {
       if (array[x]!=NULL) return;
       ListNode * node = new ListNode;
       node->val = x;
-      node->len = 1;
+      node->subtree_size = 1;
       node->parent = node;
       array[x] = node;
       set_size += 1;
@@ -135,7 +135,7 @@ class DisjointSet {
           visited[node->val] = true;
         }
         out << node->val << "[label=\"" << node->val <<
-                            " len=" << node->len <<
+                            " size=" << node->subtree_size <<
                             "\"];\n";
       }
       delete[] visited;
@@ -149,22 +149,23 @@ class DisjointSet {
 
   private:
     // As explained above this is not working at the moment.
+    /*
     ListNode * InternalFind3(int x, int & node_compressed) {
       assert(x<alloc_size);
       ListNode * node = array[x];
       if (node != node->parent) {
         node_compressed += 1;
         node->parent = InternalFind3(node->parent->val, node_compressed);
-        // A child attached to the root has len==1.
-        node->len = 1;
+        // A child attached to the root has subtree_high==1.
+        node->subtree_high = 1;
       }
-      // TODO how do you determine the new len at the root?
+      // TODO how do you determine the new subtree_high at the root?
       // It's not necessarily 2, as you might start searching the list from the
       // middle, then attaching directly to the root only the nodes above that
       // point, but not the ones below it.
       return node->parent;
     }
-
+    */
     ListNode ** array;
     size_t set_size;
     size_t alloc_size;
@@ -175,7 +176,7 @@ int main(int argc, char *argv[]) {
   for (int set_number=0; set_number<DSET_SIZE; ++set_number) {
     ds.MakeSet(set_number);
   }
-  srand(123);
+  srand(time(NULL));
   int unions = 0;
   int attempts = 0;
   while (ds.size() > 1) {

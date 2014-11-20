@@ -6,6 +6,9 @@
 #define DSET_SIZE 64
 
 // https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+// run it as:
+// g++ disjoint_set.cpp -o disjoint_set && ./disjoint_set | dot -Tpng > /tmp/dot_image.png && eog /tmp/dot_image.png
+// where eog is your picture viewer.
 
 struct ListNode {
   int val;

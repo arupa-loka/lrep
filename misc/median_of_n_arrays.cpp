@@ -100,11 +100,11 @@ size_t binary_search(int key, int array[], size_t n) {
   return LAST;
 }
 
-// Returns the first value from the sorted array of size n
-// that does not compare < than key. That mean the first value
-// that is greater or equal to key.
+// Returns the index of the first value from the sorted array of size n
+// that does not compare < than key. That means the index of the first value
+// that is >= to key.
 // If all the elements in the array compare < than key, then return MAX_INT.
-// If all the elemnts compare >= than key, then return array[0].
+// If all the elemnts compare >= than key then return 0.
 size_t lower_bound(int key, int array[], size_t n) {
   int left = 0;
   int right = n - 1;
@@ -161,11 +161,13 @@ int select_random_value(int * array[], size_t n_arrays, size_t size,
 }
 
 // Find median of N arrays of the same size.
+// Slow convergence:
+// - if the n_arrays contain the same repeated element, then the lower_bound
+// search will return the first element of each array. That will be handled by
+// the minor < greater case, then
+// dropping the single element empty-minor-side of each array will make the
+// algorithm converge slowly.
 // TODO: still does not work for cases like:
-// - if the n_arrays contains same element repeated, in that case the lower_bound
-// search will return the first element of each array, minor < greater, then
-// dropping the empty-minor-side of each array will not make the algorithm
-// converge.
 // - if the number of elements is even, the median is the average of two
 // numbers, while this algo works only with an odd number of values.
 float median_of_n_arrays(int * array[], size_t n_arrays, size_t size) {
@@ -187,19 +189,25 @@ float median_of_n_arrays(int * array[], size_t n_arrays, size_t size) {
       }
       minor += binary_search_results[i];
       greater += size - binary_search_results[i];
+      //printf("left=%lu, right=%lu\n",
+      //  binary_search_results[i], size-binary_search_results[i]);
     }
     printf("minor=%lu, greater=%lu\n", minor, greater);
-    if (minor > greater) {
+    if (minor > greater ) {
       // the median is smaller than random_value
       // then drop the greater-than side of each array
       for (size_t i = 0; i < n_arrays; ++i) {
-        array_interval[i*2+1] = binary_search_results[i];
+        array_interval[i*2+1] = binary_search_results[i]-1;
       }
     } else if (minor < greater) {
       // the median is greater than random_value
       // then drop the less-than side of each array
       for (size_t i = 0; i < n_arrays; ++i) {
-        array_interval[i*2] = binary_search_results[i];
+        size_t idx = binary_search_results[i];
+        if (array[i][idx] == random_value) {
+          idx += 1;
+        }
+        array_interval[i*2] = idx;
       }
     } else {
       // median is random_value, end here.
@@ -221,7 +229,7 @@ float median_of_n_arrays(int * array[], size_t n_arrays, size_t size) {
 
 int main(int argc, char * argv[]) {
   int ** array = new int*[N];
-  srand (123);
+  srand (1234);
   for(int i = 0; i < N; ++i) {
     array[i] = generate_random_array(SIZE);
     merge_sort(array[i], SIZE);

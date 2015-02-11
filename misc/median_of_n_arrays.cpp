@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <limits>
-#define N 2
-#define SIZE 22
+#define N 2 // number of arrays
+#define SIZE 22 // size of each array
 #define LAST std::numeric_limits<size_t>::max()
 //using namespace std;
 

@@ -35,6 +35,8 @@ bool is_palindrome2(char * s, int start, int end, int ** save) {
     if (val==0 || s[start]!=s[end]) {
       --start;
       ++end;
+      // Record in save[][] that all the previous subproblems were not leading
+      // to a palindrome string.
       while (bk_start <= start) {
         save[start][end] = 0;
         --start;
@@ -42,10 +44,12 @@ bool is_palindrome2(char * s, int start, int end, int ** save) {
       }
       return false;
     }
-    // else are equal 
+    // else val==-1 && s[start]==s[end]
   }
   --start;
   ++end;
+  // Record in save[i][j] that all the previous subproblems were leading to a
+  // palindrome string.
   while (bk_start <= start) {
     save[start][end] = end-start+1;
     --start;
@@ -150,6 +154,8 @@ void print_partitioning(char * s, int len, int * parent) {
 
 }
 
+// in graph there is a tree roted at node 'len'.
+// Do a DFS starting from node 'len' and going up to node '0'.
 void print_partitioning2(char * s, int len, bool * graph) {
   // print out palindrome partitioning
   // target node was #len
@@ -181,7 +187,7 @@ void print_partitioning2(char * s, int len, bool * graph) {
 
 void print_palindrome_partition_by_bfd(char * s, int len, int **save) {
   // treat the save matrix as a graph matrix. If the entry save[i][j] > 0,
-  // meanse s[i:j] is a palindrome. Then from s[i] we are connected to s[j+1].
+  // that means s[i:j] is a palindrome. Then from s[i] we are connected to s[j+1].
   // We want the solution that starting from s[0], brings to s[len+1], with
   // the minimum number of connections (where
   // len+1 is a virtual node of the graph that represent the end of string).
@@ -205,30 +211,46 @@ void print_palindrome_partition_by_bfd(char * s, int len, int **save) {
     visited[i] = false;
   }
   node_cost[0] = 0; // cost of root is zero
-  // Push first character in the fifo.
+  // Push the index of the first character in the fifo.
   fifo.push(0);
   while(fifo.len()>0) {
     int curr_node = fifo.pop();
-    // Explore children of curr_node.
-    // Start from curr_node because "save" is a triangular matrix.
-    // Each row is a character index in the string, and from it we can only go
-    // forward not backward.
     if (curr_node == len) {
       printf("Solution found: cost=%d, fifo.len=%d\n", node_cost[curr_node]-1,
              fifo.len());
       continue;
     }
+    // Explore children of curr_node.
+    // Start from curr_node because "save" is a triangular matrix.
+    // Each row is a character index in the string, and from it we can only go
+    // forward not backward.
     int * children = save[curr_node];
     for (int i=curr_node; i<len; ++i) {
+      // is save[curr_node][i] > 0 then the substring s[curr_node:i] is
+      // palindrome and we can jump to the start of the next substring if
+      // it has not been visited so far: !visited[i+1].
+      // Though we only want the best solutions, the one with less substrings
+      // (less splits), then we check if the number of splits collected so far
+      // to reach curr_node plus 1: node_cost[curr_node]+1,
+      // is going to be <= to the number of splits collected so far to reach
+      // i+1. We also want to report solutions with equal costs then the
+      // comparison is <= and not just <.
+      // Only solutions that bring to the node 'len' will be printed.
       if (children[i]>0 && !visited[i+1] &&
           node_cost[curr_node]+1 <= node_cost[i+1]) {
             node_cost[i+1] = node_cost[curr_node]+1;
             //printf("fif.push %d with cost %d\n", i+1, node_cost[i+1]);
             //parent[i+1] = curr_node;
+            // save in the matrix parent2, all the links for the best solutios
+            // found. The following line means: from curr_node there is an
+            // optimal solution to reach i+1.
             parent2[(len+1)*(i+1)+curr_node] = 1;
+            // push on the fifo the next node (index of the character in the
+            // string) i+1.
             fifo.push(i+1);
       }
     }
+    // all the children of curr_node have been visited.
     visited[curr_node] = true;
   }
 
@@ -240,10 +262,15 @@ void print_palindrome_partition_by_bfd(char * s, int len, int **save) {
 
 void print_palindromes_by_dyn_prog(char *s, int len) {
   // for each string length possible from 1 to len-1, print
-  // all the palindrome substring found and save then in a matrix
+  // all the palindrome substring found and save them in a matrix
   // save[][]
 
-  // Allocate and initialize matrix save[][]
+  // Allocate and initialize matrix save[][].
+  // save[i][j] record if the substring in s, starting at i and ending at j is
+  // palindrome or not. If save[i][j] is:
+  // - > 0 then it's palindrome and the value stored is the length
+  // - ==0 then it's not palindrome
+  // - ==-1 then it's still undefined
   int **save = new int*[len];
   for (int i=0; i<len; ++i) {
     save[i] = new int[len];
@@ -251,7 +278,9 @@ void print_palindromes_by_dyn_prog(char *s, int len) {
       if (i!=j) {
         save[i][j] = -1;
       } else {
-        // not necessary but should speed up the next phase
+        // not necessary but should speed up the next phase.
+        // When i==j this identify a single character in the input
+        // string s. Then a single character it's always palindrome.
         save[i][j] = 1;
       }
     }

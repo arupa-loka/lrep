@@ -28,10 +28,12 @@ class BinarySearchTree
   void toGraphViz(char * iFile);
   void PreOrder();
   void InOrder();
+  void InOrder2();
   void PostOrder();
   void PostOrder2();
 
   private:
+  BinaryTreeNode<T> * predecessor(BinaryTreeNode<T> * iNode);
   void getInOrderPredecessor( BinaryTreeNode<T>* iNode, BinaryTreeNode<T>** oPred, BinaryTreeNode<T>** oPar);
   void getInOrderSuccessor( BinaryTreeNode<T>* iNode, BinaryTreeNode<T>** oSucc, BinaryTreeNode<T>** oPar);
   BinaryTreeNode<T>* _root;
@@ -104,6 +106,51 @@ void BinarySearchTree<T>::InOrder()
     }
   }
   std::cout << std::endl;
+}
+
+/* This implementation of InOrder doesn't use any recursion or stack,
+it only relies on the right NULL pointers available in the tree leaves.
+*/
+template<class T>
+void BinarySearchTree<T>::InOrder2()
+{
+  BinaryTreeNode<T>* p = _root;
+
+  while(p != NULL) {
+    BinaryTreeNode<T> * pred = predecessor(p);
+    if (pred != NULL) {
+      pred->setRight(p);
+      p = p->getLeft();
+    } else {
+      // leaf node or node with no left subtree
+      while (p == predecessor(p->getRight())) {
+        std::cout << *p << ", ";
+        BinaryTreeNode<T> * tmp = p;
+        p = tmp->getRight();
+        tmp->setRight(NULL);
+      }
+      std::cout << *p << ", ";
+      p = p->getRight();
+    }
+  }
+  std::cout << std::endl;
+}
+
+/* Retrieve the predecessor of a node in the tree. This is to work with
+InOrder2 then it also checks for loops, in case we are looking for the
+predecessor of a node for the second time (in that case the right
+pointer of the predecessor already points to the node from where the
+search started).
+*/
+template<class T>
+BinaryTreeNode<T> * BinarySearchTree<T>::predecessor(BinaryTreeNode<T>* p) {
+  if (p==NULL || p->getLeft() == NULL)
+    return NULL;
+  BinaryTreeNode<T> * r = p->getLeft();
+  while (r->getRight() != NULL && r->getRight() != p) {
+    r = r->getRight();
+  }
+  return r;
 }
 
 template<class T>

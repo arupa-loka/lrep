@@ -13,7 +13,7 @@ int main()
   srand(seed);
 
   std::cout << "Building Tree from sequence..." << std::endl;
-  for (int i=0; i<17; ++i)
+  for (int i=0; i<27; ++i)
   {
     int a = rand() % 100;
     aQ.push(new Node(a));
@@ -22,6 +22,7 @@ int main()
   std::cout << std::endl;
   aQ.toGraphViz("./binaryTree.dot");
   aQ.InOrder();
+  aQ.InOrder2();
   aQ.PreOrder();
   aQ.PostOrder();
   aQ.PostOrder2();
